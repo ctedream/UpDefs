@@ -1,0 +1,45 @@
+Test 1 - MOF File
+
+// c:\test> mofcomp notepad_ps.mof 
+
+Open Notepad
+Observe if bginfo executes
+Clean with powershell
+
+$EventConsumerToCleanup = Get-WmiObject -Namespace root/subscription -Class CommandLineEventConsumer -Filter "Name = 'InfoConsumer'"
+$EventFilterToCleanup = Get-WmiObject -Namespace root/subscription -Class __EventFilter -Filter "Name = 'NotepadLaunchFilter'"
+$FilterConsumerBindingToCleanup = Get-WmiObject -Namespace root/subscription -Query "REFERENCES OF {$($EventConsumerToCleanup.__RELPATH)} WHERE ResultClass = __FilterToConsumerBinding"
+ 
+$FilterConsumerBindingToCleanup | Remove-WmiObject
+$EventConsumerToCleanup | Remove-WmiObject
+$EventFilterToCleanup | Remove-WmiObject
+
+
+Test 2 - Powershell
+
+$f=Set-WmiInstance -Namespace root\subscription -Class __EventFilter -Arguments @{Name='NotepadLaunchFilter';EventNamespace='root\cimv2';QueryLanguage='WQL';Query="SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name='notepad.exe'"};$c=Set-WmiInstance -Namespace root\subscription -Class CommandLineEventConsumer -Arguments @{Name='InfoConsumer';CommandLineTemplate='C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\test\info.ps1"'};Set-WmiInstance -Namespace root\subscription -Class __FilterToConsumerBinding -Arguments @{Filter=$f;Consumer=$c}
+
+Or 
+
+$f = Set-WmiInstance -Namespace root\subscription -Class __EventFilter -Arguments @{
+    Name='NotepadLaunchFilter'
+    EventNamespace='root\cimv2'
+    QueryLanguage='WQL'
+    Query="SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name='notepad.exe'"
+}
+
+$c = Set-WmiInstance -Namespace root\subscription -Class CommandLineEventConsumer -Arguments @{
+    Name='InfoConsumer'
+    CommandLineTemplate='C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\test\info.ps1"'
+}
+
+Set-WmiInstance -Namespace root\subscription -Class __FilterToConsumerBinding -Arguments @{
+    Filter=$f
+    Consumer=$c
+}
+
+
+Get-WmiObject -Namespace root\subscription -Class __EventFilter
+Get-WmiObject -Namespace root\subscription -Class CommandLineEventConsumer
+Get-WmiObject -Namespace root\subscription -Class __FilterToConsumerBinding
+

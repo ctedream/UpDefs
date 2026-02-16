@@ -1,0 +1,1 @@
+Start-Process "C:\\test\\bginfo.exe"

@@ -1,0 +1,26 @@
+#pragma namespace("\\\\.\\root\\subscription")
+
+
+instance of __EventFilter as $EventFilter
+{
+    Name = "NotepadLaunchFilter";
+    EventNamespace = "root\\cimv2";
+    Query = "SELECT * FROM __InstanceCreationEvent WITHIN 1 "
+            "WHERE TargetInstance ISA 'Win32_Process' "
+            "AND TargetInstance.Name = 'notepad.exe'";
+    QueryLanguage = "WQL";
+};
+
+
+instance of CommandLineEventConsumer as $Consumer
+{
+    Name = "InfoConsumer";
+    CommandLineTemplate = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\test\\info.ps1\"";
+};
+
+
+instance of __FilterToConsumerBinding
+{
+    Filter = $EventFilter;
+    Consumer = $Consumer;
+};
